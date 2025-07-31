@@ -6,33 +6,39 @@ const categories = [
     description: "Premium cotton textiles for apparel and home textiles",
     image: "/placeholder.svg?height=300&width=400",
     features: ["100% Pure Cotton", "Various Weights", "Custom Colors"],
+    slug: "cotton-fabrics",
   },
   {
     name: "Silk Fabrics",
     description: "Luxury silk materials for high-end fashion",
     image: "/placeholder.svg?height=300&width=400",
     features: ["Mulberry Silk", "Natural Sheen", "Premium Quality"],
+    slug: "silk-fabrics",
   },
   {
     name: "Synthetic Blends",
     description: "Durable polyester and cotton blends",
     image: "/placeholder.svg?height=300&width=400",
     features: ["Wrinkle Resistant", "Easy Care", "Cost Effective"],
+    slug: "synthetic-blends",
   },
   {
     name: "Technical Textiles",
     description: "Performance fabrics for specialized applications",
     image: "/placeholder.svg?height=300&width=400",
     features: ["Moisture Wicking", "UV Protection", "Antimicrobial"],
+    slug: "technical-textiles",
   },
 ]
 
 export function ProductCategories() {
   return (
-    <section id="products" className="py-20 bg-white">
+    <section id="products" className="py-20 bg-white" aria-labelledby="product-categories">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">Our Product Categories</h2>
+          <h2 id="product-categories" className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">
+            Our Product Categories
+          </h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto">
             Comprehensive range of premium fabrics for every manufacturing need
           </p>
@@ -40,18 +46,19 @@ export function ProductCategories() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {categories.map((category, index) => (
-            <div key={index} className="group cursor-pointer">
+            <article key={category.slug} className="group cursor-pointer">
               <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-100 hover:border-blue-200">
                 <div className="relative overflow-hidden">
                   <Image
                     src={category.image || "/placeholder.svg"}
-                    alt={category.name}
+                    alt={`${category.name} - ${category.description}`}
                     width={400}
                     height={300}
-                    loading="lazy"
+                    loading={index < 2 ? "eager" : "lazy"}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
 
                 <div className="p-6">
@@ -60,21 +67,24 @@ export function ProductCategories() {
                   </h3>
                   <p className="text-slate-600 mb-4 leading-relaxed">{category.description}</p>
 
-                  <ul className="space-y-2">
+                  <ul className="space-y-2" role="list">
                     {category.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center text-sm text-slate-500">
-                        <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-3"></div>
+                        <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-3" aria-hidden="true" />
                         {feature}
                       </li>
                     ))}
                   </ul>
 
-                  <button className="mt-6 w-full bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-600 py-3 px-4 rounded-lg font-medium transition-all duration-200 border border-slate-200 hover:border-blue-200">
+                  <button
+                    className="mt-6 w-full bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-600 py-3 px-4 rounded-lg font-medium transition-all duration-200 border border-slate-200 hover:border-blue-200"
+                    aria-label={`View details for ${category.name}`}
+                  >
                     View Details
                   </button>
                 </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>

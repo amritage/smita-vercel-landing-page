@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { env, validateProductionEnv } from "@/lib/env"
 import ClientLayout from "./ClientLayout"
+import "./globals.css"
 
 // Validate environment variables in production
 if (env.NODE_ENV === "production") {
@@ -39,6 +40,3 @@ export default function RootLayout({
 }) {
   return <ClientLayout>{children}</ClientLayout>
 }
-
-
-import './globals.css'
