@@ -7,24 +7,17 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    formats: ['image/avif', 'image/webp'],
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placeholder.svg',
+        hostname: '**',
       },
     ],
-    unoptimized: true,
-  },
-  experimental: {
-    optimizeCss: true,
   },
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
-  httpAgentOptions: {
-    keepAlive: true,
-  },
 }
 
 export default nextConfig
