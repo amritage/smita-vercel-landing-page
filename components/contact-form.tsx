@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
-import { SuccessAnimation } from "./success-animation"
+import { SuccessAnimationVariants, useSuccessAnimationVariant } from "./success-animation-variants"
 
 interface ContactFormProps {
   onSuccess?: () => void
@@ -35,6 +35,9 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // A/B Testing variant
+  const animationVariant = useSuccessAnimationVariant()
 
   // Load saved form data on component mount
   useEffect(() => {
@@ -127,6 +130,13 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
+      // Track form submission with variant
+      console.log("A/B Test - Form Submitted:", {
+        variant: animationVariant,
+        formData: formData,
+        timestamp: new Date().toISOString(),
+      })
+
       // Handle form submission
       console.log("Form submitted:", formData)
 
@@ -144,6 +154,12 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
   }
 
   const handleSuccessComplete = () => {
+    // Track animation completion
+    console.log("A/B Test - Animation Completed:", {
+      variant: animationVariant,
+      timestamp: new Date().toISOString(),
+    })
+
     setShowSuccessAnimation(false)
     onSuccess?.()
   }
@@ -181,6 +197,13 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-xl p-8">
+        {/* A/B Test Indicator (only in development) */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
+            A/B Test Active - Animation Variant: <strong>{animationVariant}</strong>
+          </div>
+        )}
+
         {/* Auto-save indicator */}
         <div className="mb-6">
           <div className="flex items-center justify-between text-sm">
@@ -460,11 +483,12 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
         </form>
       </div>
 
-      {/* Success Animation */}
-      <SuccessAnimation
+      {/* Success Animation with A/B Testing */}
+      <SuccessAnimationVariants
         isVisible={showSuccessAnimation}
         onComplete={handleSuccessComplete}
         customerName={formData.contactPerson}
+        variant={animationVariant}
       />
     </>
   )
