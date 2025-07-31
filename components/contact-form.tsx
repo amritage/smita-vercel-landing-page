@@ -4,7 +4,11 @@ import type React from "react"
 
 import { useState } from "react"
 
-export function ContactForm() {
+interface ContactFormProps {
+  onSuccess?: () => void
+}
+
+export function ContactForm({ onSuccess }: ContactFormProps = {}) {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     // Step 1
@@ -47,6 +51,7 @@ export function ContactForm() {
     // Handle form submission
     console.log("Form submitted:", formData)
     alert("Thank you for your inquiry! We will contact you within 24 hours.")
+    onSuccess?.()
   }
 
   return (

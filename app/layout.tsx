@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
+import { StickyContactButton } from "@/components/sticky-contact-button"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({
         <Navigation />
         {children}
         <Footer />
+        <StickyContactButton />
       </body>
     </html>
   )
