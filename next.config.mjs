@@ -18,7 +18,13 @@ const nextConfig = {
     unoptimized: true, // Added from updates
   },
 
-  // Security headers
+  // Enable experimental features for better performance
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['lucide-react'],
+  },
+
+  // Security and performance headers
   async headers() {
     return [
       {
@@ -36,6 +42,36 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
+          // Enable text compression
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          // Force HTTP/2
+          {
+            key: 'Alt-Svc',
+            value: 'h2=":443"',
+          },
+        ],
+      },
+      // Cache static assets aggressively
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache images
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000',
+          },
         ],
       },
     ]
@@ -47,6 +83,24 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true, // Added from updates
+  },
+
+  // Bundle analyzer for production
+  webpack: (config, { dev, isServer }) => {
+    // Reduce bundle size
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      }
+    }
+    return config
   },
 }
 
