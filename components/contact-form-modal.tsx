@@ -26,6 +26,18 @@ export function ContactFormModal({ isOpen, onClose }: ContactFormModalProps) {
     }
   }, [isOpen])
 
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        onClose()
+      }
+    }
+
+    document.addEventListener("keydown", handleEscape)
+    return () => document.removeEventListener("keydown", handleEscape)
+  }, [isOpen, onClose])
+
   if (!mounted) return null
 
   if (!isOpen) return null
@@ -133,13 +145,13 @@ export function ContactFormModal({ isOpen, onClose }: ContactFormModalProps) {
                 <div className="bg-gradient-to-r from-blue-50 to-emerald-50 p-4 rounded-lg border border-blue-100">
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-white text-sm">💡</span>
+                      <span className="text-white text-sm">💾</span>
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-900 mb-1">Quick Response Guarantee</div>
+                      <div className="font-semibold text-slate-900 mb-1">Auto-Save Enabled</div>
                       <div className="text-sm text-slate-600">
-                        We respond to all quote requests within 2 hours during business hours and provide detailed
-                        pricing within 24 hours.
+                        Your form progress is automatically saved as you type. You can safely close this window and
+                        return later to continue where you left off.
                       </div>
                     </div>
                   </div>

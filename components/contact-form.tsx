@@ -1,12 +1,13 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface ContactFormProps {
   onSuccess?: () => void
 }
+
+const STORAGE_KEY = "fabricpro_contact_form"
 
 export function ContactForm({ onSuccess }: ContactFormProps = {}) {
   const [currentStep, setCurrentStep] = useState(1)
@@ -28,6 +29,65 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
     timeline: "",
     message: "",
   })
+  const [isLoading, setIsLoading] = useState(true)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // Load saved form data on component mount
+  useEffect(() => {
+    const loadSavedData = () => {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY)
+        if (savedData) {
+          const parsed = JSON.parse(savedData)
+          setFormData(parsed.formData || formData)
+          setCurrentStep(parsed.currentStep || 1)
+          setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
+        }
+      } catch (error) {
+        console.error("Error loading saved form data:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedData()
+  }, [])
+
+  // Auto-save function with debouncing
+  const saveFormData = useCallback(() => {
+    try {
+      const dataToSave = {
+        formData,
+        currentStep,
+        lastSaved: new Date().toISOString(),
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
+      setLastSaved(new Date())
+      setHasUnsavedChanges(false)
+    } catch (error) {
+      console.error("Error saving form data:", error)
+    }
+  }, [formData, currentStep])
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (isLoading) return
+
+    setHasUnsavedChanges(true)
+    const timeoutId = setTimeout(() => {
+      saveFormData()
+    }, 1000) // Save after 1 second of inactivity
+
+    return () => clearTimeout(timeoutId)
+  }, [formData, currentStep, saveFormData, isLoading])
+
+  // Save immediately when user navigates between steps
+  useEffect(() => {
+    if (!isLoading && currentStep > 1) {
+      saveFormData()
+    }
+  }, [currentStep, saveFormData, isLoading])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -46,29 +106,107 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3))
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1))
 
+  const clearSavedData = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      setLastSaved(null)
+      setHasUnsavedChanges(false)
+    } catch (error) {
+      console.error("Error clearing saved data:", error)
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle form submission
     console.log("Form submitted:", formData)
+
+    // Clear saved data after successful submission
+    clearSavedData()
+
     alert("Thank you for your inquiry! We will contact you within 24 hours.")
     onSuccess?.()
   }
 
+  const resetForm = () => {
+    setFormData({
+      companyName: "",
+      contactPerson: "",
+      email: "",
+      phone: "",
+      businessType: "",
+      annualVolume: "",
+      primaryMarkets: "",
+      fabricTypes: [],
+      specifications: "",
+      timeline: "",
+      message: "",
+    })
+    setCurrentStep(1)
+    clearSavedData()
+  }
+
+  // Show loading state while loading saved data
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-slate-600">Loading form...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
+      {/* Auto-save indicator */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-2">
+            {hasUnsavedChanges ? (
+              <>
+                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                <span className="text-yellow-600">Saving...</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-green-600">
+                  Saved {lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          {lastSaved && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="text-slate-500 hover:text-red-600 transition-colors text-sm underline"
+            >
+              Clear Form
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           {[1, 2, 3].map((step) => (
             <div key={step} className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                   currentStep >= step ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"
                 }`}
               >
                 {step}
               </div>
               {step < 3 && (
-                <div className={`w-16 h-1 mx-2 ${currentStep > step ? "bg-blue-600" : "bg-slate-200"}`}></div>
+                <div
+                  className={`w-16 h-1 mx-2 transition-colors ${currentStep > step ? "bg-blue-600" : "bg-slate-200"}`}
+                ></div>
               )}
             </div>
           ))}
@@ -91,7 +229,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.companyName}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Your company name"
               />
             </div>
@@ -104,7 +242,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.contactPerson}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Your full name"
               />
             </div>
@@ -117,7 +255,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="your@company.com"
               />
             </div>
@@ -130,7 +268,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.phone}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="+1 (555) 123-4567"
               />
             </div>
@@ -146,7 +284,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.businessType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
                 <option value="">Select business type</option>
                 <option value="garment-manufacturer">Garment Manufacturer</option>
@@ -163,7 +301,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 name="annualVolume"
                 value={formData.annualVolume}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
                 <option value="">Select volume range</option>
                 <option value="under-10k">Under 10,000 meters</option>
@@ -181,7 +319,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 name="primaryMarkets"
                 value={formData.primaryMarkets}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="e.g., North America, Europe, Asia"
               />
             </div>
@@ -214,7 +352,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.specifications}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Weight, width, color requirements, etc."
               />
             </div>
@@ -225,7 +363,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 name="timeline"
                 value={formData.timeline}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
                 <option value="">Select timeline</option>
                 <option value="immediate">Immediate (Within 1 month)</option>
@@ -242,7 +380,7 @@ export function ContactForm({ onSuccess }: ContactFormProps = {}) {
                 value={formData.message}
                 onChange={handleInputChange}
                 rows={4}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Any additional requirements or questions..."
               />
             </div>
