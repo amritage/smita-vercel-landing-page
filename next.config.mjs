@@ -15,13 +15,6 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    unoptimized: true, // Added from updates
-  },
-
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['lucide-react'],
   },
 
   // Security and performance headers
@@ -42,16 +35,6 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
-          // Enable text compression
-          {
-            key: 'Content-Encoding',
-            value: 'gzip',
-          },
-          // Force HTTP/2
-          {
-            key: 'Alt-Svc',
-            value: 'h2=":443"',
-          },
         ],
       },
       // Cache static assets aggressively
@@ -64,28 +47,18 @@ const nextConfig = {
           },
         ],
       },
-      // Cache images
-      {
-        source: '/images/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000',
-          },
-        ],
-      },
     ]
   },
 
   // ESLint and TypeScript configurations
   eslint: {
-    ignoreDuringBuilds: true, // Added from updates
+    ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true, // Added from updates
+    ignoreBuildErrors: true,
   },
 
-  // Bundle analyzer for production
+  // Bundle optimization
   webpack: (config, { dev, isServer }) => {
     // Reduce bundle size
     if (!dev && !isServer) {

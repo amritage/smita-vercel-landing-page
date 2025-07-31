@@ -99,7 +99,7 @@ export default function HomePage() {
         </section>
 
         {/* Company Overview */}
-        <section className="py-20 bg-slate-50 content-visibility-auto">
+        <section className="py-20 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">
@@ -151,18 +151,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Product Categories - Lazy loaded */}
-        <div className="content-visibility-auto">
-          <ProductCategories />
-        </div>
+        {/* Product Categories */}
+        <ProductCategories />
 
-        {/* FAQ Section - Lazy loaded */}
-        <div className="content-visibility-auto">
-          <FAQ />
-        </div>
+        {/* FAQ Section */}
+        <FAQ />
 
         {/* Contact Form */}
-        <section id="contact" className="py-20 bg-slate-900 content-visibility-auto">
+        <section id="contact" className="py-20 bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Get Your Custom Quote Today</h2>
